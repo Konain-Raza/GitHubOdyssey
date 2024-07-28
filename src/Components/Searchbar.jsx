@@ -1,34 +1,42 @@
 import React, { useEffect, useState } from "react";
+import useStore from "../Store";
 import "../App.css";
 
 const SearchBox = () => {
-  const [username, setUsername] = useState("");
-  const [userdata, setUserData] = useState(null)
-
+  const updateData = useStore((state) => state.updateData);
+  
+  const username = useStore((state)=>state.updateData("Arisha"));
+  const [userdata, setUserData] = useState(null);
   const handleSearch = (e) => {
+    
     e.preventDefault();
-    setUserData('')
     const formdata = new FormData(e.target);
     const value = formdata.get("username").trim();
+    updateData(value);
+
     if (value) {
-      setUsername(value);
+      // setUsername(value);
+      // console.log(data);
     }
     e.target.reset();
   };
-const getUserData = async()=>{
-if(username){
-    try {
-        const response = await fetch(`https://api.github.com/users/${username}`);
+
+ useEffect(()=>{
+console.log(username)
+ },[username])
+  const getUserData = async () => {
+    if (username) {
+      try {
+        const response = await fetch(
+          `https://api.github.com/users/${username}`
+        );
         const data = await response.json();
-        setUserData(data)
-
-        console.log(userdata);
-
-    } catch (error) {
-        console.log(error)
+        setUserData(data);
+      } catch (error) {
+        console.log(error);
+      }
     }
-}
-}
+  };
   useEffect(() => {
     if (username) {
       getUserData();
@@ -38,7 +46,12 @@ if(username){
   return (
     <div id="search-container">
       <form className="searchBox" onSubmit={handleSearch}>
-        <input className="searchInput" type="text" name="username" placeholder="Enter your Github Username"/>
+        <input
+          className="searchInput"
+          type="text"
+          name="username"
+          placeholder="Enter your Github Username"
+        />
         <button className="searchButton">
           <svg
             xmlns="http://www.w3.org/2000/svg"
