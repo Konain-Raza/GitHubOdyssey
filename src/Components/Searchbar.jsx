@@ -1,55 +1,60 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import useStore from "../Store";
 import "../App.css";
+import { toast } from "react-toastify";
 
 const SearchBox = () => {
-  const updateData = useStore((state) => state.updateData);
-  
-  const username = useStore((state)=>state.updateData("Arisha"));
-  const [userdata, setUserData] = useState(null);
-  const handleSearch = (e) => {
-    
-    e.preventDefault();
-    const formdata = new FormData(e.target);
-    const value = formdata.get("username").trim();
-    updateData(value);
+  const [input, setInput] = useState("");
+  const { setUsername, updateData, removeAll } = useStore((state) => ({
+    setUsername: state.setUsername,
+    updateData: state.updateData,
+    removeAll: state.removeAll,
+  }));
 
-    if (value) {
-      // setUsername(value);
-      // console.log(data);
+  const handleForm = async (e) => {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    const name = data.get("name")?.trim() || "";
+    setInput(name);
+
+    if (name.length > 0) {
+      await fetchData(name);
+    } else {
+      toast.error("Please enter a valid name");
     }
+
     e.target.reset();
   };
 
- useEffect(()=>{
-console.log(username)
- },[username])
-  const getUserData = async () => {
-    if (username) {
-      try {
-        const response = await fetch(
-          `https://api.github.com/users/${username}`
-        );
+  const fetchData = async (name) => {
+    try {
+      const response = await fetch(`https://api.github.com/users/${name}`);
+      if (response.ok) {
         const data = await response.json();
-        setUserData(data);
-      } catch (error) {
-        console.log(error);
+        if (data.status !== "404") {
+          setUsername(name);
+          updateData(data);
+        } else {
+          throw new Error("User not found");
+        }
+      } else {
+        throw new Error("Failed to fetch data");
       }
+    } catch (error) {
+      toast.error(error);
+      removeAll();
+      toast.error("An error occurred. Please try again.");
     }
   };
-  useEffect(() => {
-    if (username) {
-      getUserData();
-    }
-  }, [username]);
 
   return (
-    <div id="search-container">
-      <form className="searchBox" onSubmit={handleSearch}>
+    <div id="search-container" onSubmit={handleForm}>
+      <form className="searchBox">
         <input
+        
           className="searchInput"
           type="text"
-          name="username"
+          name="name"
           placeholder="Enter your Github Username"
         />
         <button className="searchButton">
